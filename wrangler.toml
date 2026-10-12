@@ -1,0 +1,8 @@
+name = "zhicuo-ocr-api"
+main = "worker/index.js"
+compatibility_date = "2026-10-01"
+
+# Configure secrets using `npx wrangler secret put APP_ACCESS_TOKEN` etc.
+# Optional non-secret model setting:
+[vars]
+OPENAI_VISION_MODEL = "gpt-4.1-mini"
