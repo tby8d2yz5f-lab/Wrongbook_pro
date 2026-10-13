@@ -100,34 +100,31 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible){outline:none}
 <textarea class="field" id="ocrResult" rows="6" style="margin-top:9px" placeholder="识别结果会显示在这里，你可以先校对题干、数字、上下标和公式……"></textarea>
 <div class="toolbar" style="margin-top:9px"><button class="btn" type="button" id="saveOcrSampleBtn">保存本次校正样本</button><button class="btn" type="button" id="exportOcrSamplesBtn">导出识图训练集</button><span class="tip" id="ocrSampleStatus">把 OCR 结果人工修正后保存，可积累个人识图评测样本。</span></div>
 <div class="panel" style="margin-top:14px;padding:14px;background:var(--surface2)">
-<strong>数学公式 OCR 与 AI 图片校对（可选云端服务）</strong>
-<p class="sub" style="font-size:12px">需要先部署本项目附带的 Cloudflare Worker，并配置自己的 Mathpix / OpenAI API 密钥。API 密钥只保存在 Worker Secrets 中，不要写进网页代码。</p>
-<div class="form-grid" style="margin-top:10px">
- <div class="form-group full"><label for="aiEndpoint">你自己的 OCR / AI 服务地址</label><input class="field" id="aiEndpoint" type="url" placeholder="https://你的-worker.你的子域.workers.dev"></div>
- <div class="form-group full"><label for="aiAccessToken">服务访问口令（由你自己设置）</label><input class="field" id="aiAccessToken" type="password" autocomplete="off" placeholder="部署 Worker 时设置的 APP_ACCESS_TOKEN"></div>
-</div>
+<strong>本机免费 AI 服务（Ollama）</strong>
+<p class="sub" style="font-size:12px">AI 在本机运行，不需要 API 密钥或按次付费。请先安装 Ollama，并运行本目录中的“准备本地模型.bat”；随后点击下方按钮检查服务。</p>
+<div class="tip" style="margin-top:10px">本机服务地址：http://127.0.0.1:8765　默认模型：qwen3-vl:8b（另有轻量版）。题目文字与图片由本机模型处理。</div>
 <div class="toolbar" style="margin-top:10px;margin-bottom:0">
- <button class="btn" type="button" id="mathOcrBtn">∑ 数学公式专用识别</button>
- <button class="btn primary" type="button" id="visionCheckBtn">✦ AI 看图理解与校对</button>
- <button class="btn" type="button" id="saveAIConfigBtn">保存服务配置</button>
+ <button class="btn" type="button" id="mathOcrBtn">∑ 本地 AI 数学识别</button>
+ <button class="btn primary" type="button" id="visionCheckBtn">✦ 本地 AI 图片理解与校对</button>
+ <button class="btn" type="button" id="saveAIConfigBtn">检查本机 AI</button>
 </div>
-<div class="tip" id="aiVisionStatus" role="status">Mathpix 适合数学公式转写；AI 图片校对会根据所选学科逐行核对题干、公式、单位、图表标签和选项，并标出不确定处；仍需人工核验。图片会发送给你配置的第三方服务。</div>
+<div class="tip" id="aiVisionStatus" role="status">使用前请双击“准备本地模型.bat”下载模型，再双击“启动错题本.bat”。所有 AI 操作都通过本机 Ollama 完成。</div>
 </div>
-<div class="tip">本地 Tesseract OCR 不会主动上传图片；上面的 Mathpix 与 AI 校对是可选云端功能，启用时会把图片发送到你配置的服务商。请先确认服务商的数据政策。数学公式、负号、指数、分数线和上下标都可能被误读，保存前务必对照原图。</div></div></div><div class="form-actions"><button class="btn" type="button" id="cancelForm">取消</button><button class="btn primary" type="submit">保存错题</button></div></form></div></section>
+<div class="tip">本地 Tesseract OCR 不会主动上传图片；首次使用 OCR 引擎可能需要联网加载资源。AI 解析、图片理解和数学识别由本机模型处理。识别可能出错，保存前请对照原图核验。</div></div></div><div class="form-actions"><button class="btn" type="button" id="cancelForm">取消</button><button class="btn primary" type="submit">保存错题</button></div></form></div></section>
 <section class="page" id="page-review"><div class="page-head"><div><div class="eyebrow">ACTIVE RECALL</div><h1>复习训练</h1><p class="sub">先自己回忆解法，再查看解析；不要一开始就看答案。</p></div><button class="btn" id="shuffleReview">随机抽题</button></div><div class="panel review-card" id="reviewPanel"><div class="review-count" id="reviewCount">准备复习</div><div id="reviewContent"></div></div></section>
 <section class="page" id="page-analytics"><div class="page-head"><div><div class="eyebrow">LEARNING INSIGHTS</div><h1>薄弱点分析</h1><p class="sub">通过错题分布，决定下一步该练什么。</p></div></div><div class="grid2"><div class="panel"><div class="panel-head"><div><h2>学科分布</h2><p>各学科错题数量</p></div></div><div id="schoolSubjectSummary"></div></div><div class="panel"><div class="panel-head"><div><h2>知识模块分布</h2><p>错题数量由多到少</p></div></div><div id="subjectSummary"></div></div><div class="panel"><div class="panel-head"><div><h2>错误原因分布</h2><p>找到重复犯错的原因</p></div></div><div id="reasonAnalytics"></div></div><div class="panel"><div class="panel-head"><div><h2>掌握度评估</h2><p>根据复习自评记录，识别需要巩固的题目</p></div></div><div id="masterySummary"></div></div></div><div class="panel"><div class="panel-head"><div><h2>下一步建议</h2><p>依据当前错题数据生成</p></div></div><div id="suggestions"></div></div></section>
 <section class="page" id="page-coach"><div class="page-head"><div><div class="eyebrow">THINK · SOLVE · TRANSFER</div><h1>解析与变式训练</h1><p class="sub">从“知道答案”走向“理解为什么”，再用同类题检验迁移能力。</p></div></div>
 <div class="panel"><div class="panel-head"><div><h2>错题思路诊断</h2><p>填写题目与自己的思路，生成一份结构化复盘清单。</p></div><span class="tag orange">本地辅助 + AI 协作</span></div><div class="form-grid"><div class="form-group full"><label for="coachQuestion">题目内容</label><textarea class="field" id="coachQuestion" placeholder="粘贴数学题题干，尽量包含完整条件……"></textarea></div><div class="form-group"><label for="coachSchoolSubject">所属学科</label><select class="field" id="coachSchoolSubject"><option>数学</option><option>语文</option><option>英语</option><option>物理</option><option>化学</option><option>生物</option><option>历史</option><option>地理</option><option>政治</option><option>信息技术</option><option>其他</option></select></div><div class="form-group"><label for="coachSubject">知识模块 / 章节</label><select class="field" id="coachSubject"><option>函数</option><option>数列</option><option>三角函数</option><option>立体几何</option><option>解析几何</option><option>概率统计</option><option>导数</option><option>不等式</option><option>其他</option></select></div><div class="form-group"><label for="coachReason">你认为主要错因</label><select class="field" id="coachReason"><option>概念不清</option><option>思路错误</option><option>计算失误</option><option>审题不仔细</option><option>公式记错</option><option>方法不熟</option><option>时间不够</option></select></div><div class="form-group full"><label for="coachWork">你的原始解法 / 卡住的步骤</label><textarea class="field" id="coachWork" placeholder="写出你当时怎么做、卡在哪一步，或为什么选了这个方法……"></textarea></div><div class="form-group full"><label for="coachSolution">标准答案或正确解析（可选）</label><textarea class="field" id="coachSolution" placeholder="如果有参考答案，可以粘贴在这里；没有也可以先做自我复盘。"></textarea></div></div><div class="form-actions"><button class="btn" id="coachLoadSaved">从错题本选择</button><button class="btn primary" id="coachAnalyze">生成复盘清单</button></div><div id="coachResult" class="hidden" style="margin-top:18px"></div></div>
 <div class="panel"><div class="panel-head"><div><h2>AI 深度解析：详解 · 知识点归纳 · 三阶练习</h2><p>生成一份完整的 AI 学习辅导请求，要求逐步讲透错题，并配套 3 道由简到难的练习。</p></div><span class="tag">AI 协作</span></div>
-<div class="tip">当前版本不会在网页内直接调用 AI，也不会自动上传你的错题。它会根据你填写的题目、错因和解题过程生成一份结构化请求；只有你主动复制并发送给 ChatGPT 后，内容才会进入对话。</div>
-<div class="toolbar" style="margin-top:14px"><button class="btn primary" id="buildAIPrompt">生成详解与练习请求</button><button class="btn" id="copyAIPrompt" disabled>复制请求</button><button class="btn" id="downloadAIPrompt" disabled>下载 TXT</button></div>
+<div class="tip">启动本机 Ollama 服务后，可直接生成完整详解、相关知识点与三道递进练习，无需 API 密钥。生成结果仍需核对。也可以复制提示词，手动交给其他 AI。</div>
+<div class="toolbar" style="margin-top:14px"><button class="btn primary" type="button" id="generateAIAnalysisBtn">✦ 直接生成详解、知识点和练习</button><button class="btn" id="buildAIPrompt">复制提示词（手动备用）</button><button class="btn" id="copyAIPrompt" disabled>复制请求</button><button class="btn" id="downloadAIPrompt" disabled>下载 TXT</button></div><div class="tip" id="aiAnalysisStatus" role="status">准备就绪：填写或载入错题后即可生成。生成内容会填入下方学习闭环，保存后进入 JSON 备份。</div>
 <textarea class="field" id="aiPromptOutput" rows="14" placeholder="生成的请求会显示在这里。生成后可复制到 ChatGPT，让它详解错题、归纳知识点，并生成 3 道由简到难且附答案的练习。" aria-label="AI 深度解析请求"></textarea>
 <div class="tip">使用建议：如果题目来自照片，请先核对识别结果，尤其是负号、指数、分数、根号、不等号和上下标。不要把未经核对的 OCR 文本当作准确题目。</div>
 </div>
 <div class="panel" id="learningLoopPanel"><div class="panel-head"><div><h2>学习闭环：保存 AI 解析与练习结果</h2><p>把 ChatGPT 返回的详解粘贴到这里，再把 3 道练习分别填入；每次完成后记录结果，系统会更新复习安排。</p></div><span class="tag green">本地保存</span></div>
-<div class="tip">使用流程：从错题本载入题目 → 生成 AI 请求并发送给 ChatGPT → 将完整回答粘贴到下方。再把 AI 回答中的 3 道练习题与答案分别整理到练习卡。软件不会自动读取或验证 ChatGPT 回答，也不会自动生成真实 AI 答案。</div>
+<div class="tip">直接生成后，详解、知识点和三道练习会自动填入本区。核对内容后点击“保存解析、知识点与练习”，即可关联到错题并纳入 JSON 备份。也可手动粘贴其他 AI 的回答。</div>
 <div class="form-group full" style="margin-top:12px"><label for="learningLoopMistake">当前关联错题</label><select class="field" id="learningLoopMistake"><option value="">请选择错题，或先点击上方“从错题本选择”</option></select></div>
-<div class="form-group full" style="margin-top:12px"><label for="aiFullAnalysis">AI 完整解析（粘贴 ChatGPT 的回答）</label><textarea class="field" id="aiFullAnalysis" rows="8" placeholder="在 ChatGPT 得到详解、知识点总结和练习后，复制完整回答并粘贴到这里……"></textarea></div>
+<div class="form-group full" style="margin-top:12px"><label for="aiFullAnalysis">AI 详解与错因分析（自动生成后可编辑）</label><textarea class="field" id="aiFullAnalysis" rows="8" placeholder="自动生成的题目详解会显示在这里；也可粘贴其他 AI 的回答……"></textarea></div>
 <div class="form-group full" style="margin-top:12px"><label for="knowledgePointsInput">相关知识点（可从 AI 回答的“知识点总结”部分粘贴）</label><textarea class="field" id="knowledgePointsInput" rows="4" placeholder="逐条记录知识点、定义/公式、适用条件和本题中的用法；导出 JSON 时会一并保存……"></textarea></div>
 <div class="form-actions"><button class="btn primary" id="saveLearningBundle" type="button">保存解析、知识点与练习</button><button class="btn" id="saveLearningAnalysis" type="button">只保存解析与知识点</button><button class="btn" id="loadLearningAnalysis" type="button">载入已保存内容</button></div><div class="divider"></div><h3 style="margin:0 0 6px">三阶练习记录</h3><p class="sub">每道练习填写题目与参考答案。完成后记录掌握情况，系统会根据结果安排复习。</p>
 <div class="form-grid" style="margin-top:12px">
@@ -290,7 +287,7 @@ function selectedLearningMistake(){const id=$('learningLoopMistake')?.value||act
 function fillPracticeForm(m){const set=Array.isArray(m?.practiceSet)?m.practiceSet:[];for(let i=0;i<3;i++){const p=set[i]||{};$('practiceQ'+(i+1)).value=p.question||'';$('practiceA'+(i+1)).value=p.answer||'';$('practiceStatus'+i).textContent=p.resultLabel||'未记录';$('practiceStatus'+i).className='tag '+(p.result==='strong'?'green':p.result==='weak'?'orange':'');} $('aiFullAnalysis').value=m?.aiAnalysis||'';$('knowledgePointsInput').value=Array.isArray(m?.knowledgePoints)?m.knowledgePoints.join('\n'):(m?.knowledgePoints||'');$('learningLoopSummary').textContent=m?`当前错题：${(m.question||'').slice(0,80)}。${(m.practiceSet||[]).filter(p=>p.result).length}/3 道练习已记录结果。`: '请选择一条错题后保存。';}
 learningLoopMistake?.addEventListener('change',()=>{activeLearningMistakeId=$('learningLoopMistake').value;fillPracticeForm(selectedLearningMistake());});
 $('saveLearningAnalysis')?.addEventListener('click',async()=>{const m=selectedLearningMistake(),text=$('aiFullAnalysis').value.trim();if(!m){toast('请先选择要关联的错题');return}if(!text){toast('请先粘贴 AI 返回的详解');return}const old={aiAnalysis:m.aiAnalysis,solution:m.solution,knowledgePoints:m.knowledgePoints,aiAnalysisSavedAt:m.aiAnalysisSavedAt};m.aiAnalysis=text;m.solution=m.solution||text.slice(0,5000);m.knowledgePoints=$('knowledgePointsInput').value.trim();m.aiAnalysisSavedAt=new Date().toISOString();if(!await save()){Object.assign(m,old);return}render();toast('AI 解析与知识点已保存到这道错题');});$('loadLearningAnalysis')?.addEventListener('click',()=>{const m=selectedLearningMistake();if(!m){toast('请先选择一条错题');return}fillPracticeForm(m);toast('已载入该题的解析与练习记录')});
-$('saveLearningBundle')?.addEventListener('click',async()=>{const m=selectedLearningMistake();if(!m){toast('请先选择要关联的错题');return}const questions=[1,2,3].map(i=>$('practiceQ'+i).value.trim());if(questions.some(q=>!q)){toast('请先填入由简到难的 3 道练习题');return}const prior={aiAnalysis:m.aiAnalysis,solution:m.solution,knowledgePoints:m.knowledgePoints,practiceSet:m.practiceSet,practiceSetSavedAt:m.practiceSetSavedAt,aiAnalysisSavedAt:m.aiAnalysisSavedAt};const text=$('aiFullAnalysis').value.trim();m.aiAnalysis=text;m.solution=m.solution||(text?text.slice(0,5000):'');m.knowledgePoints=$('knowledgePointsInput').value.trim();const oldSet=Array.isArray(m.practiceSet)?m.practiceSet:[];m.practiceSet=[0,1,2].map(i=>({level:['基础巩固','方法应用','综合提升'][i],question:questions[i],answer:$('practiceA'+(i+1)).value.trim(),result:oldSet[i]?.result||'',resultLabel:oldSet[i]?.resultLabel||'未记录',completedAt:oldSet[i]?.completedAt||''}));m.practiceSetSavedAt=new Date().toISOString();m.aiAnalysisSavedAt=new Date().toISOString();if(!await save()){Object.assign(m,prior);return}fillPracticeForm(m);render();toast('解析、知识点和 3 道练习已保存，可在 JSON 备份中导出')});$('savePracticeSet')?.addEventListener('click',async()=>{const m=selectedLearningMistake();if(!m){toast('请先选择要关联的错题');return}const prior=Array.isArray(m.practiceSet)?m.practiceSet:[];m.practiceSet=[0,1,2].map(i=>({level:['基础巩固','方法应用','综合提升'][i],question:$('practiceQ'+(i+1)).value.trim(),answer:$('practiceA'+(i+1)).value.trim(),result:prior[i]?.result||'',resultLabel:prior[i]?.resultLabel||'未记录',completedAt:prior[i]?.completedAt||''}));m.practiceSetSavedAt=new Date().toISOString();if(!await save()){return}fillPracticeForm(m);toast('三阶练习已保存');});
+$('saveLearningBundle')?.addEventListener('click',async()=>{const m=selectedLearningMistake();if(!m){toast('请先选择要关联的错题');return}if((m.question||'').trim()!==$('coachQuestion').value.trim()){toast('当前关联错题与正在分析的题目不一致，请先从错题本载入正确题目');return}const questions=[1,2,3].map(i=>$('practiceQ'+i).value.trim());if(questions.some(q=>!q)){toast('请先填入由简到难的 3 道练习题');return}const prior={aiAnalysis:m.aiAnalysis,solution:m.solution,knowledgePoints:m.knowledgePoints,practiceSet:m.practiceSet,practiceSetSavedAt:m.practiceSetSavedAt,aiAnalysisSavedAt:m.aiAnalysisSavedAt};const text=$('aiFullAnalysis').value.trim();m.aiAnalysis=text;m.solution=m.solution||(text?text.slice(0,5000):'');m.knowledgePoints=$('knowledgePointsInput').value.trim();const oldSet=Array.isArray(m.practiceSet)?m.practiceSet:[];m.practiceSet=[0,1,2].map(i=>({level:['基础巩固','方法应用','综合提升'][i],question:questions[i],answer:$('practiceA'+(i+1)).value.trim(),result:oldSet[i]?.result||'',resultLabel:oldSet[i]?.resultLabel||'未记录',completedAt:oldSet[i]?.completedAt||''}));m.practiceSetSavedAt=new Date().toISOString();m.aiAnalysisSavedAt=new Date().toISOString();if(!await save()){Object.assign(m,prior);return}fillPracticeForm(m);render();toast('解析、知识点和 3 道练习已保存，可在 JSON 备份中导出')});$('savePracticeSet')?.addEventListener('click',async()=>{const m=selectedLearningMistake();if(!m){toast('请先选择要关联的错题');return}const prior=Array.isArray(m.practiceSet)?m.practiceSet:[];m.practiceSet=[0,1,2].map(i=>({level:['基础巩固','方法应用','综合提升'][i],question:$('practiceQ'+(i+1)).value.trim(),answer:$('practiceA'+(i+1)).value.trim(),result:prior[i]?.result||'',resultLabel:prior[i]?.resultLabel||'未记录',completedAt:prior[i]?.completedAt||''}));m.practiceSetSavedAt=new Date().toISOString();if(!await save()){return}fillPracticeForm(m);toast('三阶练习已保存');});
 document.querySelectorAll('[data-practice-result]').forEach(btn=>btn.addEventListener('click',async()=>{const m=selectedLearningMistake();if(!m){toast('请先选择要关联的错题');return}const i=Number(btn.dataset.practiceResult),result=btn.dataset.result;const prior=Array.isArray(m.practiceSet)?m.practiceSet:[];const item={...(prior[i]||{}),level:['基础巩固','方法应用','综合提升'][i],question:$('practiceQ'+(i+1)).value.trim(),answer:$('practiceA'+(i+1)).value.trim(),result,resultLabel:result==='weak'?'不会 / 答错':result==='okay'?'基本会做':'独立做对',completedAt:today()};if(!item.question){toast('请先填写这道练习题目');return}m.practiceSet=[0,1,2].map(j=>j===i?item:(prior[j]||{level:['基础巩固','方法应用','综合提升'][j],question:$('practiceQ'+(j+1)).value.trim(),answer:$('practiceA'+(j+1)).value.trim(),result:'',resultLabel:'未记录'}));const results=m.practiceSet.filter(p=>p.result);const weak=results.some(p=>p.result==='weak');const allStrong=results.length===3&&results.every(p=>p.result==='strong');m.practiceHistory=Array.isArray(m.practiceHistory)?m.practiceHistory:[];m.practiceHistory.push({date:today(),index:i+1,result});m.masteryLevel=weak?'薄弱':allStrong?'熟练':'基本掌握';m.status=weak?'待复习':allStrong?'已掌握':'复习中';const days=weak?1:allStrong?14:3;m.nextReview=new Date(Date.now()+days*86400000).toISOString().slice(0,10);m.practiceSetSavedAt=new Date().toISOString();if(!await save())return;fillPracticeForm(m);render();toast(weak?'已记录：建议 1 天后复习':allStrong?'三道练习均独立做对，14 天后巩固':'已记录：建议 3 天后复习');}));
 $('showPracticeAnswers')?.addEventListener('click',()=>{document.querySelectorAll('#learningLoopPanel [id^="practiceA"]').forEach(el=>{el.style.display=el.style.display==='none'?'':'none'});});
 // 当从错题本载入题目时同步关联对象，并恢复已有学习记录。
@@ -411,16 +408,57 @@ $('ocrBtn').addEventListener('click',async()=>{
 function attemptsCountLabel(profile){return profile==='math'?'14': '14';}
 $('ocrResult').addEventListener('input',()=>{$('ocrInsertBtn').disabled=!$('ocrResult').value.trim()});
 $('ocrInsertBtn').addEventListener('click',()=>{const text=$('ocrResult').value.trim();if(!text)return;const q=$('question');q.value=q.value.trim()?q.value.trim()+'\n\n'+text:text;q.dispatchEvent(new Event('input',{bubbles:true}));toast('识别文字已填入题目内容，请检查后保存')});
-// Optional server-side Mathpix formula OCR and OpenAI vision verification.
-const AI_CONFIG_KEY='zhicuo_ai_service_config_v1';
-function getAIConfig(){return {endpoint:($('aiEndpoint')?.value||'').trim().replace(/\/+$/,''),token:($('aiAccessToken')?.value||'').trim()}}
-function loadAIConfig(){try{const c=JSON.parse(localStorage.getItem(AI_CONFIG_KEY)||'{}');$('aiEndpoint').value=c.endpoint||'';$('aiAccessToken').value=c.token||''}catch(e){}}
-$('saveAIConfigBtn').addEventListener('click',()=>{const c=getAIConfig();try{localStorage.setItem(AI_CONFIG_KEY,JSON.stringify(c));$('aiVisionStatus').textContent='服务地址与访问口令已保存在当前浏览器。请勿在公用设备保存访问口令。';toast('AI 服务配置已保存')}catch(e){toast('保存配置失败，请检查浏览器存储权限')}});
-function checkAIConfig(){const c=getAIConfig();if(!c.endpoint||!/^https:\/\//i.test(c.endpoint)){throw new Error('请填写你自己部署的 HTTPS Worker 地址，并先保存配置。')}if(!c.token)throw new Error('请填写 Worker 的 APP_ACCESS_TOKEN 访问口令。');return c}
-async function callAIService(route,payload){const c=checkAIConfig();const r=await fetch(c.endpoint+route,{method:'POST',headers:{'Content-Type':'application/json','X-App-Token':c.token},body:JSON.stringify(payload)});let data={};try{data=await r.json()}catch(e){}if(!r.ok)throw new Error(data.error||`服务请求失败（HTTP ${r.status}）`);if(!data||data.ok!==true)throw new Error(data.error||'服务返回格式不正确');return data}
-$('mathOcrBtn').addEventListener('click',async()=>{if(!currentPhotos.length){toast('请先上传题目图片');return}const b=$('mathOcrBtn'),st=$('aiVisionStatus');b.disabled=true;try{st.textContent='正在通过 Mathpix 识别数学公式……';const out=[];for(let i=0;i<currentPhotos.length;i++){st.textContent=`数学公式识别中：第 ${i+1}/${currentPhotos.length} 张图片……`;const d=await callAIService('/api/math-ocr',{image:currentPhotos[i]});const text=[d.text,d.latex?`LaTeX：\n${d.latex}`:''].filter(Boolean).join('\n\n');out.push(currentPhotos.length>1?`【图片 ${i+1}｜数学公式 OCR】\n${text}`:text)}const merged=out.join('\n\n');if(!merged.trim())throw new Error('Mathpix 没有返回可用文字，请换一张更清晰的图片。');$('ocrResult').value=merged;$('ocrInsertBtn').disabled=false;st.textContent='数学公式 OCR 已完成。请核对公式结构、变量、负号、指数和分数，再填入题目。';toast('数学公式识别完成')}catch(e){st.textContent='数学公式识别失败：'+(e.message||'未知错误');toast('请检查服务地址、口令和 API 配置')}finally{b.disabled=false}});
-$('visionCheckBtn').addEventListener('click',async()=>{if(!currentPhotos.length){toast('请先上传题目图片');return}const b=$('visionCheckBtn'),st=$('aiVisionStatus');b.disabled=true;try{st.textContent='正在把原图与当前 OCR 文本发送给 AI 视觉模型核对……';const d=await callAIService('/api/vision-correct',{images:currentPhotos,ocrText:$('ocrResult').value||'',subject:$('schoolSubject').value||'数学'});const result=(d.text||'').trim();if(!result)throw new Error('AI 没有返回校对文本');$('ocrResult').value=result;$('ocrInsertBtn').disabled=false;st.textContent='AI 图片理解与校对已完成。请逐项对照原图；AI 可能误判图形、符号或题目条件。原始 OCR 结果如需保留，请先复制备份。';toast('AI 校对完成，请人工复核')}catch(e){st.textContent='AI 图片校对失败：'+(e.message||'未知错误');toast('请检查服务地址、口令和 API 配置')}finally{b.disabled=false}});
-loadAIConfig();
+// Local Ollama bridge: the launcher serves this page and forwards AI requests to Ollama on this PC.
+function checkAIConfig(){
+ const parts=location.hostname.split('.').map(Number);
+ const privateIPv4=parts.length===4&&parts.every(n=>Number.isInteger(n)&&n>=0&&n<=255)&&(
+  parts[0]===10||parts[0]===192&&parts[1]===168||parts[0]===172&&parts[1]>=16&&parts[1]<=31
+ );
+ const localHost=location.hostname==='127.0.0.1'||location.hostname==='localhost';
+ if(location.protocol!=='http:'||location.port!=='8765'||(!localHost&&!privateIPv4))throw new Error('请在电脑上启动错题本服务；手机需与电脑连接同一 Wi-Fi，并使用电脑的 WLAN IPv4 地址访问。');
+ return {endpoint:'',token:''};
+}
+async function callAIService(route,payload){
+ checkAIConfig();
+ const r=await fetch(route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ let data={};try{data=await r.json()}catch(e){}
+ if(!r.ok)throw new Error(data.error||`本机服务请求失败（HTTP ${r.status}）`);
+ if(!data||data.ok!==true)throw new Error(data.error||'本机服务返回格式不正确');
+ return data;
+}
+$('saveAIConfigBtn').addEventListener('click',async()=>{
+ const status=$('aiVisionStatus');status.textContent='正在检查本机 Ollama 与模型……';
+ try{
+  const r=await fetch('/api/health');const data=await r.json();
+  if(!r.ok||!data.ok)throw new Error(data.error||'本机服务暂不可用');
+  if(!data.ollama)throw new Error('没有检测到 Ollama。请先安装并启动 Ollama。');
+  if(!data.modelAvailable)throw new Error(`Ollama 已启动，但还没有下载 ${data.model}。请运行相应的“准备本地模型”批处理文件。`);
+  status.textContent=`本机 AI 已就绪：Ollama 正在运行，模型 ${data.model} 已下载。`;
+  toast('本机 AI 已就绪');
+ }catch(e){status.textContent='检查未完成：'+(e.message||'未知错误');toast('本机 AI 尚未就绪')}
+});
+$('generateAIAnalysisBtn').addEventListener('click',async()=>{
+ const q=$('coachQuestion').value.trim();
+ if(!q){toast('请先填写题目，或从错题本载入一道题');return}
+ const button=$('generateAIAnalysisBtn'),status=$('aiAnalysisStatus');
+ button.disabled=true;status.textContent='正在由本机模型分析题目并生成详解、知识点和三道练习……';
+ try{
+  const result=await callAIService('/api/analyze',{question:q,schoolSubject:$('coachSchoolSubject').value,module:$('coachSubject').value,reason:$('coachReason').value,wrongWork:$('coachWork').value.trim(),solution:$('coachSolution').value.trim()});
+  if(typeof result.analysis!=='string'||!Array.isArray(result.knowledgePoints)||!Array.isArray(result.exercises)||result.exercises.length!==3)throw new Error('返回内容不完整，请重试。');
+  const levels=['基础巩固','方法应用','综合提升'];
+  const exercises=levels.map(level=>result.exercises.find(item=>item.level===level));
+  if(exercises.some(item=>!item||!item.question))throw new Error('三道练习的难度层级不完整，请重试。');
+  $('aiFullAnalysis').value=result.analysis;
+  $('knowledgePointsInput').value=result.knowledgePoints.join('\n');
+  exercises.forEach((item,i)=>{$('practiceQ'+(i+1)).value=item.question;$('practiceA'+(i+1)).value=item.answer||'';$('practiceStatus'+i).textContent='未记录';$('practiceStatus'+i).className='tag'});
+  const linked=mistakes.find(m=>(m.question||'').trim()===q);
+  if(linked){refreshLearningMistakeOptions(linked.id);fillPracticeForm({...linked,aiAnalysis:result.analysis,knowledgePoints:result.knowledgePoints,practiceSet:exercises.map((item,i)=>({level:levels[i],question:item.question,answer:item.answer||'',result:'',resultLabel:'未记录'}))});}
+  status.textContent='生成完成：已填入详解、知识点和 3 道练习。请核对题目与答案，再点击“保存解析、知识点与练习”。'+(linked?' 已关联到对应错题。':' 请从错题本选择对应题目后再保存。');
+  $('learningLoopPanel').scrollIntoView({behavior:'smooth',block:'start'});toast('详解、知识点与三道练习已生成');
+ }catch(e){status.textContent='生成失败：'+(e.message||'未知错误')+'。请确认 Ollama 正在运行，并已下载当前启动器对应的模型。';toast('本机 AI 生成失败，请检查服务状态')}
+ finally{button.disabled=false}
+});$('mathOcrBtn').addEventListener('click',async()=>{if(!currentPhotos.length){toast('请先上传题目图片');return}const b=$('mathOcrBtn'),st=$('aiVisionStatus');b.disabled=true;try{st.textContent='正在通过本机视觉模型识别数学公式……';const out=[];for(let i=0;i<currentPhotos.length;i++){st.textContent=`本机数学识别中：第 ${i+1}/${currentPhotos.length} 张图片……`;const d=await callAIService('/api/math-ocr',{image:currentPhotos[i]});const text=[d.text,d.latex?`LaTeX：\n${d.latex}`:''].filter(Boolean).join('\n\n');out.push(currentPhotos.length>1?`【图片 ${i+1}｜本机公式识别】\n${text}`:text)}const merged=out.join('\n\n');if(!merged.trim())throw new Error('本机模型没有返回可用文字，请换一张更清晰的图片。');$('ocrResult').value=merged;$('ocrInsertBtn').disabled=false;st.textContent='本机数学公式识别已完成。请核对公式结构、变量、负号、指数和分数，再填入题目。';toast('本机数学识别完成')}catch(e){st.textContent='本机数学识别失败：'+(e.message||'未知错误');toast('请检查 Ollama 服务与模型')}finally{b.disabled=false}});
+$('visionCheckBtn').addEventListener('click',async()=>{if(!currentPhotos.length){toast('请先上传题目图片');return}const b=$('visionCheckBtn'),st=$('aiVisionStatus');b.disabled=true;try{st.textContent='正在用本机视觉模型核对题目图片与 OCR 文本……';const d=await callAIService('/api/vision-correct',{images:currentPhotos,ocrText:$('ocrResult').value||'',subject:$('schoolSubject').value||'数学'});const result=(d.text||'').trim();if(!result)throw new Error('本机模型没有返回校对文本');$('ocrResult').value=result;$('ocrInsertBtn').disabled=false;st.textContent='本机图片理解与校对已完成。请逐项对照原图；模型可能误判图形、符号或题目条件。';toast('本机 AI 校对完成，请人工复核')}catch(e){st.textContent='本机图片校对失败：'+(e.message||'未知错误');toast('请检查 Ollama 服务与模型')}finally{b.disabled=false}});
 
 async function testStorage(){
  const btn=$('storageTestBtn'),out=$('storageTestResult');btn.disabled=true;out.textContent='正在测试浏览器存储……';
@@ -458,6 +496,11 @@ try{refreshLearningMistakeOptions();}catch(e){console.warn('学习闭环初始�
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
