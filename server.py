@@ -87,13 +87,16 @@ class LocalHandler(BaseHTTPRequestHandler):
             raise ValueError("请求内容格式不正确。")
         return value
 
-    def ollama_chat(self, messages: list[dict], json_mode: bool = False) -> str:
+    def ollama_chat(self, messages: list[dict], json_mode: bool = False,
+                    num_predict: int | None = None) -> str:
         body = {
             "model": MODEL,
             "messages": messages,
             "stream": False,
             "options": {"temperature": 0.2},
         }
+        if num_predict is not None:
+            body["options"]["num_predict"] = num_predict
         if json_mode:
             body["format"] = "json"
         request = urllib.request.Request(
@@ -173,14 +176,25 @@ class LocalHandler(BaseHTTPRequestHandler):
                 question = str(data.get("question", "")).strip()
                 if not question:
                     raise ValueError("请先填写题目内容。")
-                system = (
+                fast_mode = data.get("fastMode") is True
+                if fast_mode:
+                    system = (
+                        "你是一位严谨的中国高中学科辅导老师。根据题目给出准确、精简、易读的答案；不虚构条件，不臆测未提供的错因，题目有歧义时指出。"
+                        "只返回 JSON 对象，字段为：analysis（字符串，最多约 400 个汉字，按核心思路、关键步骤、结论与易错提醒作答）、"
+                        "knowledgePoints（2 至 3 个字符串，每项简要写出公式/条件及本题用途）、"
+                        "exercises（恰好 3 个对象，每个有 level、question、answer 字符串字段）。"
+                        "练习 level 依次为“基础巩固”“方法应用”“综合提升”；题目由易到难且条件完整，不照抄原题；答案只写必要推导和结果，尽量简短。"
+                        "检查 JSON 语法、题目条件和答案后再输出，不要 Markdown 围栏或额外文字。"
+                    )
+                else:
+                    system = (
                     "你是一位严谨的中国高中学科辅导老师。请根据用户提供的错题，讲清正确解法、关键推理、常见误区，并归纳可迁移的知识点。"
                     "不得虚构题目条件；若题目缺条件或存在歧义，要在解析中明确说明。若用户没有提供错误过程，不得臆测其实际错因。"
                     "请在 analysis 中按“题意与已知条件、核心思路、逐步推导、结论检查、错因提醒”的顺序讲解；knowledgePoints 每项说明定义/公式、适用条件和本题用法。必须只返回符合 JSON 格式的对象，字段为：analysis（字符串，中文分步详解与错因分析）、knowledgePoints（字符串数组，每项说明知识点及适用条件/本题用法）、"
                     "exercises（恰好 3 个对象组成的数组，每个对象有 level、question、answer 三个字符串字段）。"
                     "三道练习的 level 必须依次为“基础巩固”“方法应用”“综合提升”；围绕本题核心知识点，由易到难，题干清楚，答案必须给出关键步骤和结果；出题后先检查题目条件是否完整、答案推导是否正确、三题是否逐级加深；"
                     "不要照抄原题，只改变数字造成的无效练习。不要加 Markdown 代码围栏。"
-                )
+                    )
                 user = (
                     f"学科：{data.get('schoolSubject', '')}\n知识模块：{data.get('module', '')}\n用户自述错因：{data.get('reason', '')}\n\n"
                     f"题目：\n{question}\n\n原错误过程：\n{data.get('wrongWork', '')}\n\n已知参考答案或解析：\n{data.get('solution', '')}"
@@ -188,6 +202,7 @@ class LocalHandler(BaseHTTPRequestHandler):
                 raw = self.ollama_chat(
                     [{"role": "system", "content": system}, {"role": "user", "content": user}],
                     json_mode=True,
+                    num_predict=1800 if fast_mode else None,
                 )
                 if raw.startswith("```"):
                     raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
